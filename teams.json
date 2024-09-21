@@ -1,0 +1,14 @@
+[
+{
+"Name": "Test A",
+"Rating": 1000,
+"Position": "Defender",
+"Team": "A"
+},
+{
+"Name": "Ville H",
+"Rating": 1000,
+"Position": "Forward",
+"Team": "B"
+}
+]
