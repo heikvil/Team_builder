@@ -3,305 +3,315 @@ import os
 from datetime import datetime
 import shutil
 
-def lue_pelaajat_tiedostosta(pelaajat_tiedosto):
-    pelaajat = []
-    with open(pelaajat_tiedosto, "r", encoding="utf-8") as file:
-        pelaajat = json.load(file)
-    return pelaajat
+def read_players_from_file(players_file):
+    players =[]
+    with open(players_file, "r", encoding="utf-8") as f:
+        players = json.load(f)
+    return players
 
-def lue_joukkueet_tiedostosta(joukkueet_tiedosto):
-    joukkue_a = []
-    joukkue_b = []
-    with open(joukkueet_tiedosto, "r", encoding="utf-8") as file:
-        joukkueet = json.load(file)
-        for pelaaja in joukkueet:
-            if pelaaja["Joukkue"] == "A":
-                joukkue_a.append(pelaaja)
-            elif pelaaja["Joukkue"] == "B":
-                joukkue_b.append(pelaaja)
-    return joukkue_a, joukkue_b
+def read_teams_from_file(teams_file):
+    team_a = []
+    team_b = []
+    with open(teams_file, "r", encoding="utf-8") as f:
+        teams = json.load(f)
+        for player in teams:
+            if player["Teams"] == "A":
+                team_a.append(player)
+            elif player["Teams"] == "B":
+                team_b.append(player)
+    return team_a, team_b
 
-def valitse_pelaajat(pelaajat):
-    pelaajat_nimet = {}
-    for pelaaja in pelaajat:
-        pelaajat_nimet[pelaaja["Nimi"].lower()] = pelaaja
+def choose_players(players):
+    players_names = {}
+    for player in players:
+        print(players)
+        print(player) #debug
+        player = players_names[player["Name"].lower()]
 
-    print("Valitse pelaajat ottelutapahtumaan:")
-    sarakkeet = 5
-    pelaajia = 0
-    for pelaaja in pelaajat:
-        pelaajia += 1
-        if pelaajia % sarakkeet != 0:
-            print(pelaaja["Nimi"], end=", ")
+    print("Choose players to match:")
+    columns = 5
+    players_count = 0
+    for player in players:
+        players_count += 1
+        if players_count % columns != 0:
+            print(player["Name"], end=", ")
         else:
-            print(pelaaja["Nimi"])
+            print(player["Name"])
     
-    valitut = []
-    valinta = ""
+    selected = []
+    selection = ""
     while True:
-        valinta = input("\nValitse pelaaja, (L) lopettaa: ").lower()
-        if valinta == "l":
+        selection = input("\nSelect players, (E) ends: ").lower()
+        if selection == "e":
             break
 
-        if valinta in pelaajat_nimet:
-            pelaaja = pelaajat_nimet[valinta]
-            if pelaaja not in valitut:
-                valitut.append(pelaaja)
-                for i, pelaaja in enumerate(valitut, 1):
-                    print(f"{pelaaja["Nimi"]} - {pelaaja["Rooli"]}")
+        if selection in players_names:
+            players = players_names[selection]
+            if players not in selected:
+                selected.append(players)
+                for i, players in enumerate(selected, 1):
+                    print(f"{players["Name"]} - {players["Position"]}")
             else:
-                print("Pelaaja on jo valittu.")
+                print("Player is already selected.")
         else:
-            print("Pelaaja ei löydy listalta.")
-            uusi_pelaaja = input("Haluatko lisätä uuden pelaajan? (k/e): ").lower()
-            if uusi_pelaaja == 'k':
-                nimi = input("Anna uuden pelaajan nimi: ")
+            print("Player is not in list.")
+            answer = input("Do you want to add new a player (y/n): ").lower()
+            if answer == 'y':
+                name = input("Enter the new players name: ")
                 while True:
                     try:
-                        taitotaso = int(input("Anna uuden pelaajan taitotaso: "))
+                        rating = int(input("Enter the new player's rating: "))
                         break
                     except:
-                        print("Taitotason on oltava luku. Yritä uudelleen.")
+                        print("Ratingn has to be number. Try again.")
                         continue
-                rooli = input("Anna uuden pelaajan rooli: ") #Pitäisikö olla vain tietyt valinnat?
+                while True:    
+                    position = input("Enter the new player's position (d) Defender, (h) Hybrid, (f) Forward: ")
+                    print(position) #debug
+                    if position.lower() != "d":
+                        print("Wrong position input. Try Again.")
+                        continue
+                    else:
+                        break
                 
-                try:
-                    taitotaso = int(taitotaso)
-                except ValueError:
-                    print("Virheellinen taitotaso. Yritä uudelleen.")
-                    continue
+                new_player = {"Name": name, "Rating": rating, "Position": position}
                 
-                uusi_pelaaja_tieto = {"Nimi": nimi, "Taitotaso": taitotaso, "Rooli": rooli}
-                
-                pelaajat.append(uusi_pelaaja_tieto)
-                pelaajat_nimet[nimi.lower()] = uusi_pelaaja_tieto
-                print(f"Pelaaja '{nimi}' on lisätty listalle.")
-                valitut.append(uusi_pelaaja_tieto)
-                for i, pelaaja in enumerate(valitut, 1):
-                    print(f"{pelaaja["Nimi"]} - {pelaaja["Rooli"]}")
+                players.append(new_player) #Is this necessary?
+                players_names[name.lower()] = new_player
+                print(f"Player '{name}' has added to the players list.")
+                selected.append(new_player)
+                for i, players in enumerate(selected, 1):
+                    print(f"{players["Name"]} - {players["Position"]}")
+    return selected
 
-            else:
-                print("Syötä nimi oikein tai valitse olemassa oleva pelaaja.")
+def divide_players_to_teams(selected):
+    team_a = []
+    team_b = []
+    rating_team_a = 0
+    rating_team_b = 0
 
-    return valitut
+    defenders = [players for players in selected if players["Position"].lower() == "defender"]
+    hybrid = [players for players in selected if players["Position"].lower() == "hybrid"]
+    forwards = [players for players in selected if players["Position"].lower() != ("defender" or "hybrid")]
 
-def jaa_joukkueet(valitut):
-    joukkue_a = []
-    joukkue_b = []
-    a_arvo = 0
-    b_arvo = 0
+    defenders.sort(key=lambda x: int(x["Rating"]), reverse=True)
 
-    puolustajat = [pelaaja for pelaaja in valitut if pelaaja["Rooli"].lower() == "puolustaja"]
-    hyokkaajapuolustajat = [pelaaja for pelaaja in valitut if pelaaja["Rooli"].lower() == "hyökkääjä/puolustaja"]
-    muut = [pelaaja for pelaaja in valitut if pelaaja["Rooli"].lower() != ("puolustaja" or "hyökkääjä/puolustaja")]
-
-    puolustajat.sort(key=lambda x: int(x["Taitotaso"]), reverse=True)
-
-    puolustaja_count = len(puolustajat)
-    for i in range(puolustaja_count):
+    defenders_count = len(defenders)
+    for i in range(defenders_count):
         if i % 2 == 0:
-            joukkue_a.append(puolustajat[i])
-            a_arvo += puolustajat[i]["Taitotaso"]
+            team_a.append(defenders[i])
+            rating_team_a += defenders[i]["Rating"]
         else:
-            joukkue_b.append(puolustajat[i])
-            b_arvo += puolustajat[i]["Taitotaso"]
+            team_b.append(defenders[i])
+            rating_team_b += defenders[i]["Rating"]
 
-    hyokkaajapuolustajat.sort(key=lambda x: int(x["Taitotaso"]), reverse=True)
-    hyokaajapuolustaja_count = len(hyokkaajapuolustajat)
-    for i in range(hyokaajapuolustaja_count):
+    hybrid.sort(key=lambda x: int(x["Rating"]), reverse=True)
+    hybrid_count = len(hybrid)
+    for i in range(hybrid_count):
         if i % 2 == 0:
-            joukkue_a.append(hyokkaajapuolustajat[i])
-            a_arvo += hyokkaajapuolustajat[i]["Taitotaso"]
+            team_a.append(hybrid[i])
+            rating_team_a += hybrid[i]["Rating"]
         else:
-            joukkue_b.append(hyokkaajapuolustajat[i])
-            b_arvo += hyokkaajapuolustajat[i]["Taitotaso"]
+            team_b.append(hybrid[i])
+            rating_team_b += hybrid[i]["Rating"]
 
-    muut.sort(key=lambda x: int(x["Taitotaso"]), reverse=True)
-    for pelaaja in muut:
-        if len(joukkue_b) == len(joukkue_a):
-            if a_arvo < b_arvo:
-                joukkue_a.append(pelaaja)
+    forwards.sort(key=lambda x: int(x["Rating"]), reverse=True)
+    for players in forwards:
+        if len(team_b) == len(team_a):
+            if rating_team_a < rating_team_b:
+                team_a.append(players)
             else:
-                joukkue_b.append(pelaaja)
-        elif len(joukkue_b) <= len(joukkue_a):
-            joukkue_b.append(pelaaja)
+                team_b.append(players)
+        elif len(team_b) <= len(team_a):
+            team_b.append(players)
         else:
-            joukkue_a.append(pelaaja)
-    print(f"\nPunainen ({len(joukkue_a)})")
-    for i, pelaaja in enumerate(joukkue_a, 1):
-                    print(f"{pelaaja["Nimi"]}")
-    print(f"\nMusta ({len(joukkue_b)})")
-    for i, pelaaja in enumerate(joukkue_b, 1):
-                    print(f"{pelaaja["Nimi"]}")
-    a_arvot = [pelaaja["Taitotaso"] for pelaaja in joukkue_a]
-    print(f"\nA taso: {sum(a_arvot)}")
-    b_arvot = [pelaaja["Taitotaso"] for pelaaja in joukkue_b]
-    print(f"B taso: {sum(b_arvot)}")
-    return joukkue_a, joukkue_b
+            team_a.append(players)
+    print(f"\nTeam A ({len(team_a)})")
+    for i, players in enumerate(team_a, 1):
+                    print(f"{players["Name"]}")
+    print(f"\nTeam B ({len(team_b)})")
+    for i, players in enumerate(team_b, 1):
+                    print(f"{players["Name"]}")
+    rating_team_a = [players["Rating"] for players in team_a]
+    print(f"\nTeam A rating: {sum(rating_team_a)}")
+    rating_team_b = [players["Rating"] for players in team_b]
+    print(f"Team B rating: {sum(rating_team_b)}")
+    return team_a, team_b
 
-def tallenna_pelaajat_tiedostoon(pelaajat, pelaaja_tiedosto):
-    for pelaaja in pelaajat:
-        pelaaja.pop("Joukkue", None)
+def save_players_file(players, players_file):
+    for players in players:
+        players.pop("Teams", None)
     
-    with open(pelaaja_tiedosto, "w", newline="", encoding="utf-8") as file:
-        json.dump(pelaajat, file, ensure_ascii=False, indent=0)
-    print(f"Pelaajat tallennettu tiedostoon: {pelaaja_tiedosto}")
+    with open(players_file, "w", newline="", encoding="utf-8") as f:
+        json.dump(players, f, ensure_ascii=False, indent=0)
+    print(f"Players saved to file: {players_file}")
 
-def tallenna_joukkueet_tiedostoon(joukkue_a, joukkue_b, joukkueet_tiedosto):
-    joukkueet = []
-    for pelaaja in joukkue_a:
-        pelaaja["Joukkue"] = "A"
-        joukkueet.append(pelaaja)
-    for pelaaja in joukkue_b:
-        pelaaja["Joukkue"] = "B"
-        joukkueet.append(pelaaja)
-    with open(joukkueet_tiedosto, "w", newline="", encoding="utf-8") as file:
-        json.dump(joukkueet, file, ensure_ascii=False, indent=0)
+def save_teams_file(team_a, team_b, teams_file):
+    teams = []
+    for players in team_a:
+        players["Teams"] = "A"
+        teams.append(players)
+    for players in team_b:
+        players["Teams"] = "B"
+        teams.append(players)
+    with open(teams_file, "w", newline="", encoding="utf-8") as file:
+        json.dump(teams, file, ensure_ascii=False, indent=0)
 
-def tulosta_joukkueet(joukkue_a, joukkue_b):
-    print(f"Joukkue A: ({len(joukkue_a)})")
-    for i, pelaaja in enumerate(joukkue_a, 1):
-        print(f"{pelaaja["Nimi"]} - {pelaaja["Rooli"]}")
-    print()
-    print(f"Joukkue B: ({len(joukkue_b)})")
-    for i, pelaaja in enumerate(joukkue_b, 1):
-                    print(f"{pelaaja["Nimi"]} - {pelaaja["Rooli"]}")
+def print_teams(team_a, team_b):
+    print(f"Team A: ({len(team_a)})")
+    for i, players in enumerate(team_a, 1):
+        print(f"{players["Name"]} - {players["Position"]}")
+    print(f"\nTeam B: ({len(team_b)})")
+    for i, players in enumerate(team_b, 1):
+                    print(f"{players["Name"]} - {players["Position"]}")
 
-def tulos():
+def result():
     while True:
         try:
-            a_maalit = int(input("Syötä joukkue A:n maalimäärä: "))
-            b_maalit = int(input("Syötä joukkue B:n maalimäärä: "))
+            team_a_goals = int(input("Enter Team A goals: "))
+            team_b_goals = int(input("Enter Team B golas: "))
             break
         except ValueError:
-            print("Virhe: Syötteet eivät ole kelvollisia lukuja.")
+            print("Error: The inputs are not valid numbers.")
             continue
-    return a_maalit, b_maalit
+    return team_a_goals, team_b_goals
 
-def paivita_pelaajat(pelaajat, joukkue_a, joukkue_b, a_maalit, b_maalit):
-    maaliero = a_maalit - b_maalit
-    for pelaaja in pelaajat:
-        if pelaaja["Nimi"] in [nimi["Nimi"] for nimi in joukkue_a]:
-            pelaaja["Taitotaso"] += 12 * maaliero
-        elif pelaaja["Nimi"] in [nimi["Nimi"] for nimi in joukkue_b]:
-            pelaaja["Taitotaso"] -= 12 * maaliero
+def update_players(players, team_a, team_b, team_a_goals, team_b_goals):
+    goal_difference = team_a_goals - team_b_goals
+    for players in players:
+        if players["Name"] in [name["Name"] for name in team_a]:
+            players["Rating"] += 12 * goal_difference
+        elif players["Name"] in [name["Name"] for name in team_b]:
+            players["Rating"] -= 12 * goal_difference
 
-def tulosta_pelaajat(pelaajat):
-    pelaajat.sort(key=lambda x: int(x["Taitotaso"]), reverse=True)
-    for pelaaja in pelaajat:
-        print(pelaaja["Nimi"], pelaaja["Taitotaso"])
+def print_players(players):
+    players.sort(key=lambda x: int(x["Rating"]), reverse=True)
+    for players in players:
+        print(players["Name"], players["Rating"])
 
-def muokkaa_pelaajalistaa(pelaajat):
-    print("1. Muokkaa pelaajaa")
-    print("2. Poista pelaaja")
-    toiminto = input("Valitse toiminto: ")
-    for pelaaja in pelaajat:
-        print(pelaaja["Nimi"], pelaaja["Taitotaso"], pelaaja["Rooli"])
-    if toiminto == "1":
-        pelaajan_nimi = input("Valitse muokattava pelaaja: ").lower()
-        for i, pelaaja in enumerate(pelaajat):
-            if pelaaja["Nimi"].lower() == pelaajan_nimi.lower():
-                indeksi = i
-        muokattava_pelaaja = next((pelaaja for pelaaja in pelaajat if pelaaja["Nimi"].lower() == pelaajan_nimi), None)
-        print(muokattava_pelaaja["Nimi"], muokattava_pelaaja["Taitotaso"], muokattava_pelaaja["Rooli"])
-        print("1. Muokkaa nimeä")
-        print("2. Muokkaa taitotasoa")
-        print("3. Muokkaa pelipaikkaa")
-        ominaisuus = input("Valitse muokattva ominaisuus")
-        if ominaisuus == "1":
-            print(f"Nykyinen nimi on {muokattava_pelaaja['Nimi']}")
-            uusi_nimi = input("Anna uusi nimi: ")
-            pelaajat[indeksi]["Nimi"] = uusi_nimi
-            print(f"Nimi päivitetty, uusi nimi on {pelaajat[indeksi]["Nimi"]}")
-        elif ominaisuus == "2":
-            print(f"Nykyinen taitotaso on {muokattava_pelaaja['Taitotaso']}")
-            uusi_taitotaso = int(input("Anna uusi taitotaso: "))
-            pelaajat[indeksi]["Taitotaso"] = uusi_taitotaso
-            print(f"Taitotaso päivitetty, uusi taitotaso on {pelaajat[indeksi]["Taitotaso"]}")
-        elif ominaisuus == "3":
-            print(f"Nykyinen pelipaikka on {muokattava_pelaaja['Rooli']}")
-            uusi_rooli = input("Anna uusi pelipaikka (Puolustaja / Hyökkääjäpuolustaja / Hyökkääjä): ")
-            pelaajat[indeksi]["Rooli"] = uusi_rooli
-            print(f"Pelipaikka päivitetty, uusi pelipaikka on {pelaajat[indeksi]["Rooli"]}")
-    if toiminto == "2":
-        pelaajan_nimi = input("Valitse poistettava pelaaja: ").strip().lower()
-        for i, pelaaja in enumerate(pelaajat):
-            if pelaaja["Nimi"].lower() == pelaajan_nimi.lower():
-                indeksi = i
-        poistettava_pelaaja = next((pelaaja for pelaaja in pelaajat if pelaaja["Nimi"].lower() == pelaajan_nimi), None)
-        print(poistettava_pelaaja["Nimi"], poistettava_pelaaja["Taitotaso"], poistettava_pelaaja["Rooli"])
-        del pelaajat[indeksi]
-        print("Pelaaja poistettu")
+def edit_players(players):
+    print("1. Edit player")
+    print("2. Remove players")
+    answer = input("Enter the function: ")
+    for players in players:
+        print(players["Name"], players["Rating"], players["Position"])
+    if answer == "1":
+        players_name = input("Valitse muokattava players: ").lower()
+        for i, players in enumerate(players):
+            if players["Name"].lower() == players_name.lower():
+                index = i
+        edit_player = next((players for players in players if players["Name"].lower() == players_name), None)
+        print(edit_player["Name"], edit_player["Rating"], edit_player["Position"])
+        print("1. Edit name")
+        print("2. Edit rating")
+        print("3. Edit position")
+        attribute = input("Choose wich attribute you want to edit.")
+        if attribute == "1":
+            print(f"The current name is {edit_player['name']}")
+            new_name = input("Enter the new name: ")
+            players[index]["Name"] = new_name
+            print(f"The name has updated, yhe new name is {players[index]["Name"]}")
+        elif attribute == "2":
+            print(f"The curren rating is {edit_player['rating']}")
+            new_rating = int(input("Enter the new rating: "))
+            players[index]["Rating"] = new_rating
+            print(f"The rating has uptated, the new rating is {players[index]["Rating"]}")
+        elif attribute == "3":
+            print(f"The current position is {edit_player["Position"]}")
+            new_position = input("Enter the new position (Defender / Hybrid / Forward): ")
+            players[index]["Position"] = new_position
+            print(f"The position has updateds, the new postion is {players[index]["Position"]}")
+    if answer == "2":
+        players_name = input("Choose hte palyer to be removed: ").lower()
+        for i, players in enumerate(players):
+            if players["Name"].lower() == players_name.lower():
+                index = i
+        removed_player = next((player for player in players if player["Name"].lower() == players_name), None)
+        print(removed_player["Name"], removed_player["Rating"], removed_player["Position"])
+        del players[index]
+        print(f"{players_name} removed.")
     else:
-        print("Toiminto syötetty väärin")
-    return pelaajat
+        print("Not supported input.")
+    return players
 
-def varmuuskopioi_pelaajat_tiedosto(tiedosto):
-    backup_kansio = "varmuuskopiot"
-    if not os.path.exists(backup_kansio):
-        os.makedirs(backup_kansio)
+def backup_players_file(file):
+    backup_folder = "backups"
+    if not os.path.exists(backup_folder):
+        os.makedirs(backup_folder)
 
-    tiedostonimi = os.path.basename(tiedosto)
-    aikaleima = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_tiedosto = os.path.join(backup_kansio, f"{aikaleima}_{tiedostonimi}")
+    filename = os.path.basename(file)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_file = os.path.join(backup_folder, f"{timestamp}_{filename}")
     
-    if os.path.exists(tiedosto):
-        shutil.copy2(tiedosto, backup_tiedosto)
-        print(f"Varmuuskopio luotu: {backup_tiedosto}")
+    if os.path.exists(file):
+        shutil.copy2(file, backup_file)
+        print(f"Backup created: {backup_file}")
 
 def main():
-    if not os.path.isfile("pelaajat.json"):
-        pelaajat = []
-        with open("pelaajat.json", "w", encoding="utf-8") as file:
-            json.dump(pelaajat, file, ensure_ascii=False, indent=0)
-            print("pelaajat.json tiedosto luoto")
-    pelaajat_tiedosto = "pelaajat.json"
-    if not os.path.isfile("joukkueet.json"):
-        joukkueet = []
-        with open("joukkueet.json", "w", encoding="utf-8") as file:
-            json.dump(joukkueet, file, ensure_ascii=False, indent=0)
-            print("joukkueet.json tiedosto luotu")
-    joukkueet_tiedosto = "joukkueet.json"
+    if not os.path.isfile("players.json"):
+        players = [
+            {
+                "Name": "Test A",
+                "Rating": 1000,
+                "Position": "Forward"
+            }
+        ]
+        with open("players.json", "w", encoding="utf-8") as f:
+            json.dump(players, f, ensure_ascii=False, indent=0)
+            print("players.json file has created")
+    players_file = "players.json"
+    if not os.path.isfile("teams.json"):
+        teams = [
+            {
+                "Name": "Test A",
+                "Rating": 1000,
+                "Position": "Forward",
+                "Team": "A"
+            }
+            ]
+        with open("teams.json", "w", encoding="utf-8") as file:
+            json.dump(teams, file, ensure_ascii=False, indent=0)
+            print("teams.json file has created")
+    teams_file = "teams.json"
     while True:
-        pelaajat = lue_pelaajat_tiedostosta(pelaajat_tiedosto)
+        players = (players_file)
 
-        print("\nValitse toiminto:")
-        print("1. Jaa uudet joukkueet")
-        print("2. Syötä tulos ja päivitä pelaajien taitotasot")
-        print("3. Tulosta pelaajalista taitotason mukaan lajiteltuna")
-        print("4. Muokkaa pelaajalistaa")
-        valinta = input("Valintasi: ")
+        print("\nSelect function:")
+        print("1. Divide the new teams")
+        print("2. Enter the result and update players ratingts")
+        print("3. Print the players, sorted by ratingns")
+        print("4. Edit players")
+        answer = input("\nEnter function: ")
 
-        if valinta == "1":
-            valitut = valitse_pelaajat(pelaajat)
-            #varmuuskopioi_pelaajat_tiedosto(pelaajat_tiedosto)
+        if answer == "1":
+            selected= choose_players(players)
+            #backup_players_file(players_file)
+            save_players_file(players, players_file)
+            team_a, team_b = divide_players_to_teams(selected)
+            save_teams_file(team_a, team_b, teams_file)
+
+        elif answer == "2":
+            team_a, team_b = read_players_from_file(teams_file)
+            team_a_goals, team_b_goals = result()
+            update_players(players, team_a, team_b, team_a_goals, team_b_goals)
+            #backup_players_file(players_file)
             #Ota varmuuskopiointi käyttöön poistamalla risuaita
-            tallenna_pelaajat_tiedostoon(pelaajat, pelaajat_tiedosto)
-            joukkue_a, joukkue_b = jaa_joukkueet(valitut)
-            tallenna_joukkueet_tiedostoon(joukkue_a, joukkue_b, joukkueet_tiedosto)
-
-        elif valinta == "2":
-            joukkue_a, joukkue_b = lue_joukkueet_tiedostosta(joukkueet_tiedosto)
-            a_maalit, b_maalit = tulos()
-            paivita_pelaajat(pelaajat, joukkue_a, joukkue_b, a_maalit, b_maalit)
-            #varmuuskopioi_pelaajat_tiedosto(pelaajat_tiedosto)
-            #Ota varmuuskopiointi käyttöön poistamalla risuaita
-            tallenna_pelaajat_tiedostoon(pelaajat, pelaajat_tiedosto)
+            save_players_file(players, players_file)
         
-        elif valinta == "3":
-            tulosta_pelaajat(pelaajat)
+        elif answer == "3":
+            print_players(players)
 
-        elif valinta == "4":
-            muokkaa_pelaajalistaa(pelaajat)
-            tallenna_pelaajat_tiedostoon(pelaajat, pelaajat_tiedosto)
+        elif answer == "4":
+            edit_players(players)
+            save_players_file(players, players_file)
 
         else:
-            print("Virheellinen valinta. Yritä uudelleen")
+            print("Not suported funtion. Try again")
             continue
         
-        jatko = input("Haluatko suorittaa ohjelman uudestaan (k/e)?").lower()
-        if jatko != "k":
-            print("Ohjelma lopetetaan.")
+        repeat = input("Do you wan to run the program again (y/n)?").lower()
+        if repeat != "y":
+            print("End of programm.")
             break
 
 main()
