@@ -1,14 +1,20 @@
 [
 {
-"Name": "Test A",
+"Name": "Test B",
 "Rating": 1000,
 "Position": "Defender",
 "Team": "A"
 },
 {
-"Name": "Ville H",
+"Name": "Test A",
 "Rating": 1000,
-"Position": "Forward",
+"Position": "Hybrid",
+"Team": "A"
+},
+{
+"Name": "Test C",
+"Rating": 1000,
+"Position": "Hybrid",
 "Team": "B"
 }
 ]

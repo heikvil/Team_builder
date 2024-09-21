@@ -39,7 +39,9 @@ def select_players(players):
     selected = []
     selection = ""
     while True:
-        selection = input("\nSelect player, (E) ends: ").lower()
+        selection = input("\nSelect player, (e) ends or (m) back to menu: ").lower()
+        if selection == "m":
+            main()
         if selection == "e":
             break
 
@@ -53,7 +55,9 @@ def select_players(players):
                 print("Player is already selected.")
         else:
             print("Player is not in the list.")
-            answer = input("Do you want to add the new player (y/n): ").lower()
+            answer = input("Do you want to add the new player (y/n) or (m) back to menu: ").lower()
+            if answer == "m":
+                main()
             if answer == 'y':
                 name = input("Enter the new player name: ")
                 while True:
@@ -97,10 +101,9 @@ def divide_teams(selected):
 
     defenders = [player for player in selected if player["Position"].lower() == "defender"]
     hybrids = [player for player in selected if player["Position"].lower() == "hybrid"]
-    forwards = [player for player in selected if player["Position"].lower() != ("defender" or "hybrid")]
+    forwards = [player for player in selected if player["Position"].lower() == "forward"]
 
     defenders.sort(key=lambda x: int(x["Rating"]), reverse=True)
-
     defender_count = len(defenders)
     for i in range(defender_count):
         if i % 2 == 0:
@@ -119,6 +122,8 @@ def divide_teams(selected):
     forwards.sort(key=lambda x: int(x["Rating"]), reverse=True)
     for player in forwards:
         if len(team_b) == len(team_a):
+            team_a_rating = [player["Rating"] for player in team_a]
+            team_b_rating = [player["Rating"] for player in team_b]
             if team_a_rating < team_b_rating:
                 team_a.append(player)
             else:
@@ -194,7 +199,10 @@ def print_players(players):
 def edit_players(players):
     print("1. Edit player")
     print("2. Remove player")
+    print("(m) back to menu")
     answer = input("Select function: ")
+    if answer.lower() == "m":
+        main()
     for player in players:
         print(player["Name"], player["Rating"], player["Position"])
     if answer == "1":
@@ -206,8 +214,8 @@ def edit_players(players):
         print(editing_player["Name"], editing_player["Rating"], editing_player["Position"])
         print("1. Edit name")
         print("2. Edit rating")
-        print("3. Edit pelipaikkaa")
-        attribute = input("Select attribute to edit.")
+        print("3. Edit position")
+        attribute = input("Select attribute to edit: ")
         if attribute == "1":
             print(f"Current name is {editing_player["Name"]}")
             new_name = input("Enter new name: ")
@@ -220,10 +228,23 @@ def edit_players(players):
             print(f"New rating is {players[index]["Rating"]}")
         elif attribute == "3":
             print(f"Current position is {editing_player["Position"]}")
-            new_position = input("Enter new position (Defender / Hybrid / Forward): ")
+            new_position = input("Enter new position (d) Defender, (h) Hybrid, (f) Forward: ")
+            while True:
+                if new_position.lower() == "d":
+                    new_position = "Defender"
+                    break
+                elif new_position.lower() == "h":
+                    new_position = "Hybrid"
+                    break
+                elif new_position.lower() == "f":
+                    new_position = "Forward"
+                    break
+                else:
+                    print("Incorrect input. Try again.")
+                    continue  
             players[index]["Position"] = new_position
             print(f"New position is {players[index]["Position"]}")
-    if answer == "2":
+    elif answer == "2":
         player_name = input("Select player to remove: ").lower()
         for i, player in enumerate(players):
             if player["Name"].lower() == player_name.lower():
