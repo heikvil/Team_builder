@@ -296,7 +296,6 @@ def main():
         if selection == "1":
             selected = select_players(players)
             #backup_players_file(players_file)
-            #Ota varmuuskopiointi käyttöön poistamalla risuaita
             save_players_file(players, players_file)
             team_a, team_b = divide_teams(selected)
             save_teams_file(team_a, team_b, teams_file)
@@ -306,7 +305,6 @@ def main():
             team_a_goals, team_b_goals = result()
             update_players(players, team_a, team_b, team_a_goals, team_b_goals)
             #backup_players_file(players_file)
-            #Ota varmuuskopiointi käyttöön poistamalla risuaita
             save_players_file(players, players_file)
         
         elif selection == "3":
