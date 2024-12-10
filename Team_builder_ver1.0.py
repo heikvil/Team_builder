@@ -81,7 +81,12 @@ def select_roster(roster):
     return selected
 
 def add_new_player():
-    name = input("Enter the new player name: ")
+    while True:
+        name = input("Enter the new player name: ")
+        if name != '':
+            break
+        else:
+            print("Name can't be empty. Try again.")
     while True:
         try:
             rating = int(input("Enter the new player rating: "))
